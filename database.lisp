@@ -26,4 +26,29 @@
   (loop (add-record (prompt-for-cd))
      (if (not (y-or-n-p "Another? [y/n]: ")) (return))))
 
+(defun save-db (filename)
+  (with-open-file (out filename
+		       :direction :output
+		       :if-exists :supersede)
+    (with-standard-io-syntax
+      (print *db* out))))
 
+(defun load-db (filename)
+  (with-open-file (in filename)
+    (with-standard-io-syntax
+      (setf *db* (read in)))))
+
+(defun select (selector-fn)
+  (remove-if-not selector-fn *db*))
+
+(defun artist-selector (artist)
+   #'(lambda (cd) (equal (getf cd :artist) artist)))
+
+(defun where (&key title artist rating (ripped nil ripped-p))
+  #'(lambda (cd)
+      (and
+       (if title (equal (getf cd :title) title) t)
+       (if artist (equal (getf cd :artist) artist) t)
+       (if rating (equal (getf cd :rating) rating) t)
+       (if ripped-p (equal (getf cd :ripped) ripped) t))))
+	   
